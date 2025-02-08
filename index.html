@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parallex-Animation</title>
+    <style>
+        body {
+            height: 300vh;
+            background: #000;
+            margin: 0;
+        }
+        canvas {
+            position: fixed;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="image-sequence" width="1920px" height="1080px"></canvas>
+
+    <script>
+        let frameCount = 458;
+        let canvas = document.getElementById("image-sequence");
+        let ctx = canvas.getContext("2d");
+
+        let images = [];
+        let loadedImages = 0;
+        let playhead = { frame: 0 };
+        let currentFrame = 0;
+        let animationFrameId;
+
+        for (let i = 0; i < frameCount; i++) {
+            let img = new Image();
+            img.src = `https://ik.imagekit.io/mdtbz6wek/Earth%20Zoom%20In%20Realistic%20Clouds%20With%20Alpha%20Matte${(i + 1).toString().padStart(3, "0")}.png`; // Ensure images are in this directory
+
+            img.onload = () => {
+                loadedImages++;
+                if (loadedImages === 1) {
+                    updateImage();
+                }
+            };
+
+            img.onerror = () => console.error(`Failed to load: ${img.src}`);
+
+            images.push(img);
+        }
+
+        function updateImage() {
+            let frame = Math.round(playhead.frame);
+            if (frame !== currentFrame && images[frame]?.complete) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(images[frame], 0, 0);
+                currentFrame = frame;
+            }
+        }
+
+        function smoothScroll() {
+            let scrollFraction = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+            playhead.frame = Math.min(frameCount - 1, Math.max(0, scrollFraction * frameCount));
+
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            animationFrameId = requestAnimationFrame(updateImage);
+        }
+
+        window.addEventListener("scroll", smoothScroll);
+    </script>
+</body>
+</html>
